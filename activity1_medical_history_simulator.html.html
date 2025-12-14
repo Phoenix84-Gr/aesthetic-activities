@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δραστηριότητα 1: Προσομοίωση Λήψης Ιατρικού Ιστορικού</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFA07A 50%, #FFD700 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #FF6B9D;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .patient-card {
+            background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #FF6B9D;
+        }
+
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #FF6B9D;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .question-section {
+            margin: 25px 0;
+        }
+
+        .question {
+            background: linear-gradient(135deg, #E6F3FF, #F0E6FF);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6B9DFF;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+        }
+
+        .option:hover {
+            transform: translateX(10px);
+            border-color: #FF6B9D;
+            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #FF6B9D, #FFB6C1);
+            color: white;
+            border-color: #FF1493;
+        }
+
+        .option.correct {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border-color: #2E7D32;
+        }
+
+        .option.incorrect {
+            background: linear-gradient(135deg, #F44336, #E57373);
+            color: white;
+            border-color: #C62828;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #FF6B9D, #FF1493);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 30px auto;
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.6);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            background: linear-gradient(135deg, #FFF9C4, #FFECB3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border-left: 5px solid #FFD700;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score {
+            text-align: center;
+            font-size: 2em;
+            color: #FF6B9D;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 10px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #FF6B9D, #FFD700);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Προσομοίωση Λήψης Ιατρικού Ιστορικού</h1>
+        <p class="subtitle">Δοκιμάστε τις δεξιότητές σας ως αισθητικός επαγγελματίας!</p>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="patient-card">
+            <h2 style="color: #FF6B9D; margin-bottom: 15px;">📋 Πληροφορίες Ασθενούς</h2>
+            <div class="patient-info">
+                <div class="info-item">
+                    <span class="info-label">Όνομα:</span>
+                    Μαρία Παπαδοπούλου
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ηλικία:</span>
+                    32 έτη
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Επάγγελμα:</span>
+                    Δικηγόρος
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Αίτημα:</span>
+                    Περιποίηση ενυδάτωσης προσώπου
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Αλλεργίες:</span>
+                    Μέντα, γάλα, αυγά, ξηροί καρποί, σόγια, σιτάρι, ψάρια
+                </div>
+            </div>
+        </div>
+
+        <div class="question-section" id="questions"></div>
+
+        <button class="submit-btn" id="submitBtn" onclick="checkAnswers()">Ελέγξτε τις Απαντήσεις</button>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        const questionsData = [
+            {
+                question: "🎯 Ποια είναι η ΠΡΩΤΗ ερώτηση που πρέπει να κάνετε στην Μαρία;",
+                options: [
+                    "Τι είδος προϊόντων χρησιμοποιείτε στο δέρμα σας;",
+                    "Έχετε κάποιο χρόνιο πρόβλημα υγείας ή παίρνετε φάρμακα;",
+                    "Πόσο θέλετε να ξοδέψετε για τη θεραπεία;",
+                    "Έχετε δοκιμάσει άλλες αισθητικές θεραπείες;"
+                ],
+                correct: 1,
+                explanation: "Η προστασία της υγείας είναι πρώτιστη! Πρέπει να ξέρουμε αν υπάρχουν contraindications (π.χ. διαβήτης, καρδιοπάθειες, φαρμακευτική αγωγή)."
+            },
+            {
+                question: "💊 Η Μαρία θέλει να χρησιμοποιήσετε μία ενυδατική κρέμα με μέντα που της άρεσε πολύ το άρωμα. Τι πρέπει να κάνετε;",
+                options: [
+                    "Να προχωρήσετε κανονικά, η μέντα είναι φυσικό συστατικό",
+                    "Να ΜΗΝ χρησιμοποιήσετε την κρέμα - η Μαρία έχει αλλεργία στη μέντα",
+                    "Να δοκιμάσετε λίγο σε μία περιοχή και αν δεν κοκκινίσει, να συνεχίσετε",
+                    "Να μειώσετε την ποσότητα της κρέμας στο μισό"
+                ],
+                correct: 1,
+                explanation: "🚨 ΚΟΚΚΙΝΗ ΣΗΜΑΙΑ! Η Μαρία έχει δηλώσει αλλεργία στη μέντα. ΔΕΝ πρέπει ΠΟΤΕ να χρησιμοποιήσετε προϊόν με αλλεργιογόνα συστατικά, ακόμα κι αν το ζητήσει η πελάτισσα. Αυτό είναι θέμα ασφάλειας!"
+            },
+            {
+                question: "📝 Ποιο στοιχείο ΔΕΝ χρειάζεται να καταγράψετε στο ιατρικό ιστορικό;",
+                options: [
+                    "Αλλεργίες σε φάρμακα ή καλλυντικά",
+                    "Το μηνιαίο εισόδημα της ασθενούς",
+                    "Προηγούμενες χειρουργικές επεμβάσεις",
+                    "Κοινωνική/επαγγελματική κατάσταση"
+                ],
+                correct: 1,
+                explanation: "Το εισόδημα δεν είναι ιατρική πληροφορία. Το GDPR προστατεύει τα προσωπικά δεδομένα - καταγράφουμε μόνο ό,τι είναι απαραίτητο για την ασφάλεια."
+            },
+            {
+                question: "🤝 Πώς πρέπει να επικοινωνήσετε με την Μαρία;",
+                options: [
+                    "Με τεχνικούς όρους για να δείξετε την εξειδίκευσή σας",
+                    "Με ευγένεια, σεβασμό και κατανοητή γλώσσα",
+                    "Γρήγορα, για να εξυπηρετήσετε περισσότερους πελάτες",
+                    "Αποφεύγοντας να απαντήσετε σε δύσκολες ερωτήσεις"
+                ],
+                correct: 1,
+                explanation: "Η επικοινωνία πρέπει να είναι ευγενική και κατανοητή! Ο αισθητικός δεν κάνει ιατρική διάγνωση, αλλά συνεργάζεται με τον πελάτη για ασφαλή αποτελέσματα."
+            },
+            {
+                question: "📄 Πριν ξεκινήσετε τη θεραπεία, τι ΠΡΕΠΕΙ να κάνετε;",
+                options: [
+                    "Να ξεκινήσετε αμέσως για να μην χάσετε χρόνο",
+                    "Να ζητήσετε υπογεγραμμένη συγκατάθεση (informed consent)",
+                    "Να πάρετε φωτογραφία μόνο",
+                    "Να στείλετε SMS υπενθύμισης"
+                ],
+                correct: 1,
+                explanation: "Η υπογεγραμμένη συγκατάθεση είναι ΑΠΑΡΑΙΤΗΤΗ! Προστατεύει τον επαγγελματία και τον πελάτη, και είναι νομική υποχρέωση (GDPR)."
+            }
+        ];
+
+        let userAnswers = [];
+
+        function loadQuestions() {
+            const container = document.getElementById('questions');
+            questionsData.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <div class="question-text"><strong>Ερώτηση ${index + 1}:</strong> ${q.question}</div>
+                    <div class="options" id="options-${index}">
+                        ${q.options.map((opt, i) => `
+                            <div class="option" onclick="selectOption(${index}, ${i})">
+                                <span>${String.fromCharCode(65 + i)}. ${opt}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function selectOption(questionIndex, optionIndex) {
+            const options = document.querySelectorAll(`#options-${questionIndex} .option`);
+            options.forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === optionIndex) {
+                    opt.classList.add('selected');
+                }
+            });
+            userAnswers[questionIndex] = optionIndex;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = (userAnswers.filter(a => a !== undefined).length / questionsData.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function checkAnswers() {
+            if (userAnswers.filter(a => a !== undefined).length !== questionsData.length) {
+                alert('Παρακαλώ απαντήστε σε όλες τις ερωτήσεις!');
+                return;
+            }
+
+            let correct = 0;
+            questionsData.forEach((q, index) => {
+                const options = document.querySelectorAll(`#options-${index} .option`);
+                options.forEach((opt, i) => {
+                    if (i === q.correct) {
+                        opt.classList.add('correct');
+                    } else if (i === userAnswers[index] && i !== q.correct) {
+                        opt.classList.add('incorrect');
+                    }
+                    opt.style.pointerEvents = 'none';
+                });
+
+                if (userAnswers[index] === q.correct) {
+                    correct++;
+                }
+            });
+
+            const percentage = (correct / questionsData.length) * 100;
+            const feedback = document.getElementById('feedback');
+            feedback.classList.add('show');
+            
+            let message = '';
+            if (percentage === 100) {
+                message = '🎉 ΤΕΛΕΙΟ! Είστε άριστος αισθητικός επαγγελματίας!';
+            } else if (percentage >= 80) {
+                message = '👏 Πολύ καλά! Έχετε εξαιρετικές γνώσεις!';
+            } else if (percentage >= 60) {
+                message = '👍 Καλή προσπάθεια! Συνεχίστε να μελετάτε!';
+            } else {
+                message = '📚 Χρειάζεται περισσότερη μελέτη. Δοκιμάστε ξανά!';
+            }
+
+            feedback.innerHTML = `
+                <div class="score">${correct} / ${questionsData.length} (${percentage.toFixed(0)}%)</div>
+                <h3 style="color: #FF6B9D; margin-bottom: 15px;">${message}</h3>
+                ${questionsData.map((q, i) => `
+                    <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 10px;">
+                        <strong style="color: ${userAnswers[i] === q.correct ? '#4CAF50' : '#F44336'}">
+                            Ερώτηση ${i + 1}: ${userAnswers[i] === q.correct ? '✓ Σωστό' : '✗ Λάθος'}
+                        </strong>
+                        <p style="margin-top: 10px;">${q.explanation}</p>
+                    </div>
+                `).join('')}
+            `;
+
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Ολοκληρώθηκε!';
+        }
+
+        window.onload = loadQuestions;
+    </script>
+</body>
+</html>
