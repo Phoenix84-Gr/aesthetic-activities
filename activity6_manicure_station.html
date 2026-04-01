@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δραστηριότητα 6: Σταθμός Μανικιούρ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 920px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            padding: 40px;
+        }
+        h1 { color: #f5576c; text-align: center; font-size: 2.3em; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #666; font-size: 1.05em; margin-bottom: 20px; }
+        .instructions {
+            background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+            border-left: 5px solid #f5576c;
+            border-radius: 15px;
+            padding: 16px 20px;
+            margin-bottom: 25px;
+            font-size: 0.97em;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .boards-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        @media(max-width: 650px) { .boards-wrapper { grid-template-columns: 1fr; } }
+
+        .pool-board, .order-board {
+            border-radius: 20px;
+            padding: 20px;
+            min-height: 350px;
+        }
+        .pool-board {
+            background: linear-gradient(135deg, #FFF5F5, #FFE4E1);
+            border: 3px dashed #f5576c;
+        }
+        .order-board {
+            background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+            border: 3px solid #9C27B0;
+        }
+        .board-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .pool-board .board-title { color: #f5576c; }
+        .order-board .board-title { color: #7B1FA2; }
+
+        .step-card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            cursor: grab;
+            border: 2px solid #f8bbd0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            user-select: none;
+        }
+        .step-card:hover { transform: scale(1.03); box-shadow: 0 6px 20px rgba(245,87,108,0.25); border-color: #f5576c; }
+        .step-card.dragging { opacity: 0.4; transform: scale(0.97); }
+        .step-card.drag-over { border-color: #9C27B0; background: #F3E5F5; }
+        .step-icon { font-size: 1.8em; flex-shrink: 0; }
+        .step-text { font-size: 0.95em; color: #333; line-height: 1.4; }
+        .step-num {
+            background: linear-gradient(135deg, #9C27B0, #CE93D8);
+            color: white;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.9em; flex-shrink: 0;
+        }
+
+        .order-slot {
+            background: rgba(156,39,176,0.08);
+            border: 2px dashed #CE93D8;
+            border-radius: 14px;
+            min-height: 65px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            transition: all 0.2s;
+        }
+        .order-slot.drag-over-slot { border-color: #9C27B0; background: rgba(156,39,176,0.15); }
+        .slot-label {
+            color: #CE93D8;
+            font-size: 0.85em;
+            font-weight: bold;
+            padding: 8px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .check-btn {
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+            color: white;
+            border: none;
+            padding: 15px 45px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto 20px;
+            box-shadow: 0 5px 20px rgba(245,87,108,0.4);
+            transition: all 0.3s;
+        }
+        .check-btn:hover { transform: scale(1.05); }
+        .check-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .result-area { display: none; }
+        .result-area.show { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)} }
+
+        .step-result {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        .step-result.correct { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border-left: 4px solid #4CAF50; }
+        .step-result.incorrect { background: linear-gradient(135deg, #FFEBEE, #FFCDD2); border-left: 4px solid #F44336; }
+        .result-score {
+            text-align: center;
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #f5576c;
+            margin: 20px 0 10px;
+        }
+        .tip-box {
+            background: linear-gradient(135deg, #FFF9E6, #FFF3CD);
+            border-left: 5px solid #FFD700;
+            border-radius: 15px;
+            padding: 18px 22px;
+            margin-top: 20px;
+            font-size: 0.95em;
+            line-height: 1.7;
+        }
+        .restart-btn {
+            background: linear-gradient(135deg, #9C27B0, #CE93D8);
+            color: white; border: none; padding: 13px 35px; border-radius: 25px;
+            font-size: 1em; cursor: pointer; display: block; margin: 15px auto 0; transition: all 0.3s;
+        }
+        .restart-btn:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>💅 Σταθμός Μανικιούρ</h1>
+    <p class="subtitle">Τοποθετήστε τα βήματα του μανικιούρ στη σωστή σειρά!</p>
+
+    <div class="instructions">
+        <strong>📋 Οδηγίες:</strong> Σύρετε (drag & drop) κάθε βήμα από το αριστερό panel στη σωστή θέση στο δεξί panel. Τακτοποιήστε και τα 10 βήματα, μετά πατήστε "Έλεγχος". <br>
+        <em>📱 Σε κινητό: Πατήστε ένα βήμα για να το επιλέξετε, μετά πατήστε μια θέση για να το τοποθετήσετε.</em>
+    </div>
+
+    <div class="boards-wrapper">
+        <div class="pool-board">
+            <div class="board-title">📦 Βήματα (σύρετε στη σωστή σειρά)</div>
+            <div id="poolArea"></div>
+        </div>
+        <div class="order-board">
+            <div class="board-title">✅ Σωστή Σειρά Μανικιούρ</div>
+            <div id="orderArea"></div>
+        </div>
+    </div>
+
+    <button class="check-btn" id="checkBtn" onclick="checkOrder()" disabled>🔍 Έλεγχος Σειράς</button>
+
+    <div class="result-area" id="resultArea">
+        <div class="result-score" id="resultScore"></div>
+        <div id="resultSteps"></div>
+        <div class="tip-box">
+            <strong>💡 Η σωστή σειρά μανικιούρ:</strong><br>
+            1. Αφαίρεση βερνικιού → 2. Σχηματισμός νυχιών → 3. Προστασία δέρματος → 4. Εμποτισμός χεριών →
+            5. Αφαίρεση επιδερμίδας → 6. Φροντίδα επιδερμίδας → 7. Φρεζάρισμα (αν χρειάζεται) →
+            8. Μασάζ χεριών → 9. Καθαρισμός νυχιών → 10. Εφαρμογή βερνικιού
+        </div>
+        <button class="restart-btn" onclick="location.reload()">🔄 Ξαναδοκιμάστε</button>
+    </div>
+</div>
+
+<script>
+const correctOrder = [
+    { icon: "🧴", text: "Αφαίρεση παλαιού βερνικιού με ασετόν ή remover", step: 1 },
+    { icon: "📐", text: "Σχηματισμός νυχιών με λίμα (filing)", step: 2 },
+    { icon: "🛡️", text: "Προστασία δέρματος με κυτικουλόλαδο γύρω από νύχια", step: 3 },
+    { icon: "💧", text: "Εμποτισμός χεριών σε ζεστό νερό με αφρόλουτρο (5 λεπτά)", step: 4 },
+    { icon: "✂️", text: "Αφαίρεση επιδερμίδας (cuticle removal) με αποχωροτικά", step: 5 },
+    { icon: "🌿", text: "Φροντίδα επιδερμίδας — εφαρμογή ειδικής κρέμας cuticle", step: 6 },
+    { icon: "🔧", text: "Φρεζάρισμα / λείανση επιφάνειας νυχιού αν χρειάζεται", step: 7 },
+    { icon: "🤲", text: "Μασάζ χεριών και αντιβραχίων με κρέμα ή λάδι", step: 8 },
+    { icon: "🧹", text: "Καθαρισμός νυχιών από υπολείμματα κρέμας (αφαίρεση λίπους)", step: 9 },
+    { icon: "✨", text: "Εφαρμογή βερνικιού: base coat → χρώμα (2 στρώσεις) → top coat", step: 10 },
+];
+
+// Shuffle for pool
+function shuffle(arr) {
+    const a = [...arr];
+    for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+    return a;
+}
+
+let poolItems = shuffle(correctOrder.map((_,i)=>i));
+let slots = new Array(10).fill(null); // slots[0..9] = index into correctOrder or null
+let selected = null; // for mobile tap
+
+function renderPool() {
+    const pool = document.getElementById('poolArea');
+    pool.innerHTML = '';
+    poolItems.forEach(idx => {
+        const item = correctOrder[idx];
+        const card = document.createElement('div');
+        card.className = 'step-card' + (selected===idx?' dragging':'');
+        card.draggable = true;
+        card.dataset.idx = idx;
+        card.innerHTML = `<div class="step-icon">${item.icon}</div><div class="step-text">${item.text}</div>`;
+        card.ondragstart = e => { e.dataTransfer.setData('idx',idx); e.dataTransfer.setData('from','pool'); card.classList.add('dragging'); };
+        card.ondragend = () => { card.classList.remove('dragging'); };
+        card.onclick = () => handleTap(idx, 'pool');
+        pool.appendChild(card);
+    });
+}
+
+function renderSlots() {
+    const area = document.getElementById('orderArea');
+    area.innerHTML = '';
+    for(let s=0;s<10;s++) {
+        const slot = document.createElement('div');
+        slot.className = 'order-slot';
+        slot.dataset.slot = s;
+        slot.ondragover = e => { e.preventDefault(); slot.classList.add('drag-over-slot'); };
+        slot.ondragleave = () => slot.classList.remove('drag-over-slot');
+        slot.ondrop = e => { e.preventDefault(); slot.classList.remove('drag-over-slot'); handleDrop(e, s); };
+        slot.onclick = () => handleSlotTap(s);
+
+        const label = document.createElement('div');
+        label.className = 'slot-label';
+        label.textContent = s+1;
+        slot.appendChild(label);
+
+        if(slots[s]!==null) {
+            const idx = slots[s];
+            const item = correctOrder[idx];
+            const card = document.createElement('div');
+            card.className = 'step-card';
+            card.style.margin = '0';
+            card.style.flex = '1';
+            card.draggable = true;
+            card.dataset.idx = idx;
+            card.innerHTML = `<div class="step-icon">${item.icon}</div><div class="step-text">${item.text}</div>`;
+            card.ondragstart = e => { e.dataTransfer.setData('idx',idx); e.dataTransfer.setData('from','slot'); e.dataTransfer.setData('slot',s); card.classList.add('dragging'); };
+            card.ondragend = () => card.classList.remove('dragging');
+            card.onclick = e => { e.stopPropagation(); handleTap(idx,'slot',s); };
+            slot.appendChild(card);
+        }
+        area.appendChild(slot);
+    }
+    const filled = slots.filter(s=>s!==null).length;
+    document.getElementById('checkBtn').disabled = filled < 10;
+}
+
+function handleDrop(e, slotNum) {
+    const idx = parseInt(e.dataTransfer.getData('idx'));
+    const from = e.dataTransfer.getData('from');
+    const fromSlot = e.dataTransfer.getData('slot');
+
+    if(slots[slotNum] !== null) {
+        // swap back to pool or previous slot
+        const displaced = slots[slotNum];
+        if(from==='slot') { slots[parseInt(fromSlot)] = displaced; }
+        else { poolItems.push(displaced); }
+    } else {
+        if(from==='slot') slots[parseInt(fromSlot)] = null;
+    }
+
+    if(from==='pool') poolItems = poolItems.filter(i=>i!==idx);
+    slots[slotNum] = idx;
+    renderPool(); renderSlots();
+}
+
+// Mobile tap logic
+function handleTap(idx, from, fromSlot) {
+    if(selected !== null && selected === idx) { selected = null; renderPool(); renderSlots(); return; }
+    selected = idx;
+    renderPool(); renderSlots();
+}
+
+function handleSlotTap(slotNum) {
+    if(selected === null) {
+        // Try to pick from slot
+        if(slots[slotNum] !== null) {
+            const idx = slots[slotNum];
+            selected = idx;
+            slots[slotNum] = null;
+            poolItems.push(idx);
+            renderPool(); renderSlots();
+        }
+        return;
+    }
+    const idx = selected;
+    selected = null;
+    // Place
+    if(slots[slotNum] !== null) {
+        poolItems.push(slots[slotNum]);
+    }
+    slots[slotNum] = idx;
+    poolItems = poolItems.filter(i=>i!==idx);
+    renderPool(); renderSlots();
+}
+
+function checkOrder() {
+    let correct = 0;
+    let html = '';
+    slots.forEach((idx, s) => {
+        const item = correctOrder[idx];
+        const isCorrect = idx === s; // idx 0..9 = correct step 1..10
+        if(isCorrect) correct++;
+        html += `<div class="step-result ${isCorrect?'correct':'incorrect'}">
+            <div class="step-icon">${item.icon}</div>
+            <div>
+                <strong>Θέση ${s+1}: ${isCorrect?'✅ Σωστά':'❌ Λάθος'}</strong><br>
+                ${item.text}
+                ${!isCorrect ? `<br><em style="color:#888">Σωστή θέση: ${idx+1}</em>` : ''}
+            </div>
+        </div>`;
+    });
+    const pct = Math.round((correct/10)*100);
+    let msg = pct===100?'🌟 Τέλειο!':pct>=70?'👏 Πολύ καλά!':pct>=50?'👍 Καλή προσπάθεια!':'📚 Χρειάζεται επανάληψη!';
+    document.getElementById('resultScore').textContent = `${msg} ${correct}/10 (${pct}%)`;
+    document.getElementById('resultSteps').innerHTML = html;
+    document.getElementById('resultArea').classList.add('show');
+    document.getElementById('checkBtn').disabled = true;
+    document.getElementById('resultArea').scrollIntoView({behavior:'smooth'});
+}
+
+renderPool();
+renderSlots();
+</script>
+</body>
+</html>

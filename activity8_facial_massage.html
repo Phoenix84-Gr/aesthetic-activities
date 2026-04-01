@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δραστηριότητα 8: Μάλαξη Προσώπου</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            padding: 40px;
+        }
+        h1 { color: #2E7D32; text-align: center; font-size: 2.3em; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #666; font-size: 1.05em; margin-bottom: 20px; }
+        .instructions {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            border-left: 5px solid #4CAF50;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            font-size: 0.97em;
+            color: #444;
+            line-height: 1.7;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        @media(max-width:700px) { .main-layout { grid-template-columns: 1fr; } }
+
+        /* Face SVG area */
+        .face-area {
+            background: linear-gradient(135deg, #f0fff4, #e6fffa);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #C8E6C9;
+        }
+        .face-area h3 { color: #2E7D32; margin-bottom: 15px; font-size: 1.1em; }
+        #faceSvg { width: 100%; max-width: 320px; cursor: pointer; }
+
+        .zone-btn {
+            stroke: transparent;
+            fill: rgba(76,175,80,0.15);
+            cursor: pointer;
+            transition: fill 0.2s;
+        }
+        .zone-btn:hover { fill: rgba(76,175,80,0.4); }
+        .zone-btn.active { fill: rgba(76,175,80,0.55); stroke: #2E7D32; stroke-width: 2; }
+        .zone-btn.quiz-correct { fill: rgba(76,175,80,0.7); }
+        .zone-btn.quiz-wrong { fill: rgba(244,67,54,0.5); }
+
+        .zone-label {
+            font-size: 11px;
+            fill: #1B5E20;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* Technique panel */
+        .technique-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .technique-card {
+            background: white;
+            border: 2px solid #C8E6C9;
+            border-radius: 16px;
+            padding: 15px 18px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .technique-card:hover { border-color: #4CAF50; box-shadow: 0 4px 15px rgba(76,175,80,0.2); transform: translateX(5px); }
+        .technique-card.active {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            border-color: #4CAF50;
+            box-shadow: 0 6px 20px rgba(76,175,80,0.3);
+        }
+        .technique-card.quiz-correct { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border-color: #4CAF50; }
+        .technique-card.quiz-wrong { background: linear-gradient(135deg, #FFEBEE, #FFCDD2); border-color: #F44336; }
+        .tech-icon { font-size: 1.8em; flex-shrink: 0; }
+        .tech-content { flex: 1; }
+        .tech-name { font-weight: bold; color: #2E7D32; font-size: 1em; margin-bottom: 4px; }
+        .tech-greek { color: #555; font-size: 0.88em; margin-bottom: 4px; font-style: italic; }
+        .tech-desc { color: #666; font-size: 0.85em; line-height: 1.5; }
+        .tech-zones { font-size: 0.8em; color: #4CAF50; font-weight: bold; margin-top: 4px; }
+
+        /* Info box */
+        .info-box {
+            background: linear-gradient(135deg, #FFF9E6, #FFF3CD);
+            border-radius: 15px;
+            padding: 18px 22px;
+            border-left: 5px solid #FFD700;
+            margin: 20px 0;
+            font-size: 0.95em;
+            line-height: 1.7;
+            color: #555;
+            min-height: 80px;
+            transition: all 0.3s;
+        }
+        .info-box h4 { color: #E65100; margin-bottom: 8px; font-size: 1em; }
+
+        /* Quiz section */
+        .quiz-section {
+            background: linear-gradient(135deg, #f0fff4, #e6fffa);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid #C8E6C9;
+            margin-top: 25px;
+        }
+        .quiz-section h3 { color: #2E7D32; margin-bottom: 15px; }
+        .quiz-q { font-size: 1.05em; color: #333; margin-bottom: 15px; font-weight: 500; }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media(max-width:500px) { .quiz-options { grid-template-columns: 1fr; } }
+        .quiz-opt {
+            background: white;
+            border: 2px solid #C8E6C9;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.93em;
+            color: #444;
+        }
+        .quiz-opt:hover { border-color: #4CAF50; background: #F1F8E9; }
+        .quiz-opt.correct { background: linear-gradient(135deg,#4CAF50,#8BC34A); color:white; border-color:#2E7D32; }
+        .quiz-opt.incorrect { background: linear-gradient(135deg,#F44336,#E57373); color:white; border-color:#C62828; }
+
+        .quiz-feedback {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 15px;
+            font-size: 0.93em;
+            line-height: 1.6;
+            color: #444;
+            display: none;
+            border-left: 4px solid #4CAF50;
+        }
+        .quiz-feedback.show { display: block; }
+        .quiz-nav { display: flex; justify-content: space-between; margin-top: 15px; align-items: center; }
+        .quiz-score { color: #2E7D32; font-weight: bold; font-size: 1em; }
+        .q-btn {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white; border: none; padding: 11px 28px; border-radius: 25px;
+            font-size: 0.95em; cursor: pointer; transition: all 0.3s;
+        }
+        .q-btn:hover { transform: scale(1.05); }
+        .q-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .final-score {
+            text-align: center;
+            background: linear-gradient(135deg, #4CAF50, #56ab2f);
+            color: white; border-radius: 20px; padding: 25px;
+            display: none;
+        }
+        .final-score.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌿 Μάλαξη Προσώπου</h1>
+    <p class="subtitle">Μάθετε τις τεχνικές μάλαξης & εξασκηθείτε με quiz!</p>
+
+    <div class="instructions">
+        <strong>📋 Οδηγίες:</strong> <strong>Μέρος Α:</strong> Κάντε κλικ σε μια ζώνη προσώπου για να δείτε ποιες τεχνικές εφαρμόζονται εκεί. Ή κάντε κλικ σε μια τεχνική για να δείτε λεπτομέρειες. <strong>Μέρος Β:</strong> Ολοκληρώστε το quiz 6 ερωτήσεων!
+    </div>
+
+    <div class="main-layout">
+        <!-- Face SVG -->
+        <div class="face-area">
+            <h3>🗺️ Ζώνες Προσώπου — Κάντε κλικ!</h3>
+            <svg id="faceSvg" viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">
+                <!-- Face outline -->
+                <ellipse cx="150" cy="180" rx="110" ry="140" fill="#FDEBD0" stroke="#D4A574" stroke-width="2"/>
+                <!-- Hair -->
+                <ellipse cx="150" cy="55" rx="115" ry="55" fill="#8B6F47"/>
+                <ellipse cx="150" cy="80" rx="110" ry="50" fill="#FDEBD0"/>
+                <!-- Neck -->
+                <rect x="115" y="305" width="70" height="55" rx="10" fill="#FDEBD0" stroke="#D4A574" stroke-width="1"/>
+                <!-- Ears -->
+                <ellipse cx="40" cy="190" rx="18" ry="25" fill="#FDEBD0" stroke="#D4A574" stroke-width="1.5"/>
+                <ellipse cx="260" cy="190" rx="18" ry="25" fill="#FDEBD0" stroke="#D4A574" stroke-width="1.5"/>
+
+                <!-- Eyes -->
+                <ellipse cx="110" cy="170" rx="22" ry="13" fill="white" stroke="#555" stroke-width="1.5"/>
+                <ellipse cx="190" cy="170" rx="22" ry="13" fill="white" stroke="#555" stroke-width="1.5"/>
+                <circle cx="110" cy="170" r="8" fill="#6B4226"/>
+                <circle cx="190" cy="170" r="8" fill="#6B4226"/>
+                <circle cx="113" cy="167" r="3" fill="black"/>
+                <circle cx="193" cy="167" r="3" fill="black"/>
+                <!-- Eyebrows -->
+                <path d="M88 153 Q110 145 132 153" stroke="#6B4226" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <path d="M168 153 Q190 145 212 153" stroke="#6B4226" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <!-- Nose -->
+                <path d="M150 185 L138 225 Q150 232 162 225 Z" fill="#E8C4A0" stroke="#D4A574" stroke-width="1"/>
+                <!-- Mouth -->
+                <path d="M120 260 Q150 275 180 260" stroke="#C47D7D" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <path d="M125 260 Q150 253 175 260" stroke="#C47D7D" stroke-width="2" fill="none"/>
+
+                <!-- CLICKABLE ZONES -->
+                <!-- Zone 1: Forehead -->
+                <rect class="zone-btn" id="zone-forehead" x="80" y="90" width="140" height="55" rx="12"
+                      onclick="activateZone('forehead')"/>
+                <text class="zone-label" x="150" y="122" text-anchor="middle" onclick="activateZone('forehead')">Μέτωπο</text>
+
+                <!-- Zone 2: Eye area -->
+                <rect class="zone-btn" id="zone-eyes" x="70" y="150" width="160" height="35" rx="10"
+                      onclick="activateZone('eyes')"/>
+                <text class="zone-label" x="150" y="173" text-anchor="middle" onclick="activateZone('eyes')" style="font-size:9px">Περιοφθάλμια</text>
+
+                <!-- Zone 3: Cheeks -->
+                <rect class="zone-btn" id="zone-cheeks" x="55" y="200" width="190" height="45" rx="12"
+                      onclick="activateZone('cheeks')"/>
+                <text class="zone-label" x="150" y="228" text-anchor="middle" onclick="activateZone('cheeks')">Μάγουλα</text>
+
+                <!-- Zone 4: Nose & nasolabial -->
+                <rect class="zone-btn" id="zone-nose" x="115" y="183" width="70" height="60" rx="10"
+                      onclick="activateZone('nose')"/>
+                <text class="zone-label" x="150" y="218" text-anchor="middle" style="font-size:9px" onclick="activateZone('nose')">Μύτη/Ρινογν.</text>
+
+                <!-- Zone 5: Chin & jaw -->
+                <ellipse class="zone-btn" id="zone-chin" cx="150" cy="280" rx="65" ry="28"
+                      onclick="activateZone('chin')"/>
+                <text class="zone-label" x="150" y="285" text-anchor="middle" onclick="activateZone('chin')">Πηγούνι/Σαγόνι</text>
+
+                <!-- Zone 6: Neck -->
+                <rect class="zone-btn" id="zone-neck" x="110" y="308" width="80" height="45" rx="10"
+                      onclick="activateZone('neck')"/>
+                <text class="zone-label" x="150" y="336" text-anchor="middle" onclick="activateZone('neck')">Λαιμός</text>
+            </svg>
+        </div>
+
+        <!-- Techniques -->
+        <div>
+            <div class="technique-panel" id="techniquePanel">
+                <!-- Rendered by JS -->
+            </div>
+            <div class="info-box" id="infoBox">
+                <h4>👆 Επιλέξτε μια ζώνη ή τεχνική</h4>
+                Κάντε κλικ σε μια περιοχή του προσώπου ή σε μια τεχνική για να δείτε πληροφορίες.
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="quiz-section" id="quizSection">
+        <h3>📝 Quiz: Τεχνικές Μάλαξης (6 Ερωτήσεις)</h3>
+        <div id="quizContent"></div>
+        <div class="final-score" id="finalScore">
+            <div style="font-size:3em">🏆</div>
+            <div style="font-size:2em; font-weight:bold; margin:10px 0" id="finalNum"></div>
+            <div id="finalMsg" style="font-size:1.1em; opacity:0.9; margin-bottom:15px"></div>
+            <button onclick="location.reload()" style="background:rgba(255,255,255,0.2);border:2px solid white;color:white;padding:12px 30px;border-radius:25px;cursor:pointer;font-size:1em;">🔄 Ξαναδοκιμάστε</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const techniques = [
+    {
+        id: "effleurage",
+        icon: "🤲",
+        name: "Εφφλεράζ (Effleurage)",
+        greek: "Βαθύ άγγιγμα — χαϊδέψεις",
+        desc: "Αργές, ρυθμικές, εκτεινόμενες κινήσεις με όλη την παλάμη. Εκκινεί και τελειώνει κάθε συνεδρία. Βελτιώνει κυκλοφορία, χαλαρώνει.",
+        zones: ["Μέτωπο", "Μάγουλα", "Λαιμός", "Όλο το πρόσωπο"],
+        zoneIds: ["forehead", "cheeks", "neck"]
+    },
+    {
+        id: "petrissage",
+        icon: "🖐️",
+        name: "Πετρισάζ (Petrissage)",
+        greek: "Ζύμωμα — ανύψωση ιστών",
+        desc: "Ζύμωμα, πιέσιμο και ανύψωση μυϊκού ιστού. Εφαρμόζεται με δάχτυλα και μερικώς παλάμη. Τονώνει μύες, βελτιώνει ελαστικότητα.",
+        zones: ["Μάγουλα", "Σαγόνι", "Λαιμός"],
+        zoneIds: ["cheeks", "chin", "neck"]
+    },
+    {
+        id: "friction",
+        icon: "👉",
+        name: "Φρικσιόν (Friction)",
+        greek: "Τριβή — κυκλικές κινήσεις",
+        desc: "Βαθιές κυκλικές κινήσεις με άκρα δαχτύλων ή αντίχειρα. Διαλύει συσσωρεύσεις, βελτιώνει κυκλοφορία σε στοχευμένα σημεία.",
+        zones: ["Μέτωπο", "Μάγουλα", "Ρινογναθική πτυχή"],
+        zoneIds: ["forehead", "cheeks", "nose"]
+    },
+    {
+        id: "tapotement",
+        icon: "👆",
+        name: "Ταποτεμάν (Tapotement)",
+        greek: "Χτυπηματάκια — tapping",
+        desc: "Γρήγορα, ρυθμικά, ελαφριά χτυπηματάκια με άκρα δαχτύλων. Διεγείρει νεύρα, τονώνει, βελτιώνει λεμφική κυκλοφορία.",
+        zones: ["Μέτωπο", "Μάγουλα", "Πηγούνι"],
+        zoneIds: ["forehead", "cheeks", "chin"]
+    },
+    {
+        id: "vibration",
+        icon: "🔅",
+        name: "Βιμπρασιόν (Vibration)",
+        greek: "Δόνηση — τρεμούλιασμα",
+        desc: "Ταχύτατες δονήσεις με άκρα δαχτύλων ή παλάμη. Εφαρμόζεται πάνω σε νεύρα ή μύες. Χαλαρωτική και αναζωογονητική δράση.",
+        zones: ["Περιοφθάλμια", "Ρινογναθική πτυχή", "Μέτωπο"],
+        zoneIds: ["eyes", "nose", "forehead"]
+    },
+    {
+        id: "effleurage_eye",
+        icon: "👁️",
+        name: "Περιοφθάλμια τεχνική",
+        greek: "Ειδική τεχνική ματιών",
+        desc: "Εξαιρετικά απαλές κινήσεις με δαχτυλάκι γύρω από τον κόγχο. Από έσω κανθό → εξωτερικά. Μειώνει οίδημα, μαύρους κύκλους.",
+        zones: ["Περιοφθάλμια περιοχή"],
+        zoneIds: ["eyes"]
+    },
+];
+
+const zoneInfo = {
+    forehead: { name: "Μέτωπο", techs: ["effleurage","petrissage","friction","tapotement","vibration"], note: "Κινήσεις από κέντρο προς κρόταφους. Ιδανικό για χαλάρωση μετωπιαίου μυ." },
+    eyes: { name: "Περιοφθάλμια", techs: ["effleurage_eye","vibration"], note: "Πολύ απαλές κινήσεις! Λεπτό δέρμα — δεν τεντώνουμε ποτέ." },
+    cheeks: { name: "Μάγουλα", techs: ["effleurage","petrissage","friction","tapotement"], note: "Κυκλικές κινήσεις από μύτη προς κρόταφους. Τονωτική δράση." },
+    nose: { name: "Μύτη & Ρινογναθική", techs: ["friction","vibration"], note: "Βαθιές κυκλικές κινήσεις κατά μήκος της ρινογναθικής πτυχής με αντίχειρα." },
+    chin: { name: "Πηγούνι & Σαγόνι", techs: ["petrissage","tapotement"], note: "Ζύμωμα γνάθου και πηγουνιού — εξαιρετικό κατά φυλλολαχανιάσματος." },
+    neck: { name: "Λαιμός", techs: ["effleurage","petrissage"], note: "Κινήσεις πάντα ΚΑΤΩ (λεμφικές). Αποφεύγουμε πίεση στις καρωτίδες." },
+};
+
+let activeZone = null;
+let activeTech = null;
+
+function renderTechniques() {
+    const panel = document.getElementById('techniquePanel');
+    panel.innerHTML = techniques.map(t => `
+        <div class="technique-card" id="tech-${t.id}" onclick="activateTech('${t.id}')">
+            <div class="tech-icon">${t.icon}</div>
+            <div class="tech-content">
+                <div class="tech-name">${t.name}</div>
+                <div class="tech-greek">${t.greek}</div>
+                <div class="tech-desc">${t.desc}</div>
+                <div class="tech-zones">📍 ${t.zones.join(' · ')}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function activateZone(zoneId) {
+    // Clear previous
+    document.querySelectorAll('.zone-btn').forEach(z => z.classList.remove('active'));
+    document.querySelectorAll('.technique-card').forEach(c => c.classList.remove('active'));
+    document.getElementById('zone-'+zoneId).classList.add('active');
+    activeZone = zoneId;
+
+    const info = zoneInfo[zoneId];
+    const relTechs = techniques.filter(t => info.techs.includes(t.id));
+    relTechs.forEach(t => document.getElementById('tech-'+t.id).classList.add('active'));
+
+    document.getElementById('infoBox').innerHTML = `
+        <h4>📍 ${info.name}</h4>
+        <strong>Κατάλληλες τεχνικές:</strong> ${relTechs.map(t=>t.icon+' '+t.name).join(' &nbsp;|&nbsp; ')}<br><br>
+        💡 <em>${info.note}</em>
+    `;
+}
+
+function activateTech(techId) {
+    document.querySelectorAll('.zone-btn').forEach(z => z.classList.remove('active'));
+    document.querySelectorAll('.technique-card').forEach(c => c.classList.remove('active'));
+    document.getElementById('tech-'+techId).classList.add('active');
+    activeTech = techId;
+
+    const t = techniques.find(tc=>tc.id===techId);
+    t.zoneIds.forEach(z => document.getElementById('zone-'+z) && document.getElementById('zone-'+z).classList.add('active'));
+
+    document.getElementById('infoBox').innerHTML = `
+        <h4>${t.icon} ${t.name}</h4>
+        <strong>Ελληνικός όρος:</strong> ${t.greek}<br>
+        <strong>Τεχνική:</strong> ${t.desc}<br>
+        <strong>Εφαρμόζεται σε:</strong> ${t.zones.join(', ')}
+    `;
+}
+
+// QUIZ
+const quizQuestions = [
+    {
+        q: "Ποια τεχνική ΕΚΚΙΝΕΙ και ΤΕΛΕΙΩΝΕΙ κάθε συνεδρία μάλαξης προσώπου;",
+        opts: ["Πετρισάζ", "Εφφλεράζ", "Ταποτεμάν", "Φρικσιόν"],
+        correct: 1,
+        exp: "Το Εφφλεράζ (αργές, εκτεινόμενες κινήσεις) χρησιμοποιείται για να ξεκινά και να τελειώνει κάθε συνεδρία, εξασφαλίζοντας χαλάρωση και συνέχεια."
+    },
+    {
+        q: "Για τη ρινογναθική πτυχή ποια τεχνική χρησιμοποιείται συνήθως;",
+        opts: ["Βιμπρασιόν", "Εφφλεράζ", "Φρικσιόν με αντίχειρα", "Ταποτεμάν"],
+        correct: 2,
+        exp: "Η Φρικσιόν (τριβή) με αντίχειρα εφαρμόζεται κατά μήκος της ρινογναθικής πτυχής με βαθιές κυκλικές κινήσεις για να 'σπάσει' συσσωρεύσεις ιστού."
+    },
+    {
+        q: "Γιατί οι κινήσεις στον λαιμό γίνονται ΠΑΝΤΑ προς τα κάτω;",
+        opts: ["Για αισθητικούς λόγους", "Για να ακολουθούμε τη λεμφική ροή και να αποφύγουμε τις καρωτίδες", "Γιατί έτσι πονάει λιγότερο", "Δεν έχει σημασία η κατεύθυνση"],
+        correct: 1,
+        exp: "Οι λεμφικές αποχετεύσεις ακολουθούν ροή προς τα κάτω στον λαιμό. Η σωστή κατεύθυνση βοηθά αποτοξίνωση και αποφεύγει επικίνδυνη πίεση στις καρωτίδες."
+    },
+    {
+        q: "Ποια τεχνική απαγορεύεται σε ενεργή ακμή ή φλεγμονή;",
+        opts: ["Εφφλεράζ (απαλό άγγιγμα)", "Πετρισάζ (ζύμωμα)", "Ειδική τεχνική ματιών", "Βιμπρασιόν (δόνηση)"],
+        correct: 1,
+        exp: "Το Πετρισάζ περιλαμβάνει ζύμωμα και ανύψωση ιστού — σε ενεργή ακμή μπορεί να εξαπλώσει μόλυνση και να επιδεινώσει τη φλεγμονή. ΑΝΤΕΝΔΕΙΚΝΥΤΑΙ."
+    },
+    {
+        q: "Ποιο δάχτυλο χρησιμοποιείται για τη μάλαξη της περιοφθάλμιας περιοχής;",
+        opts: ["Αντίχειρας (μεγάλο)", "Δείκτης (τρίτο δάχτυλο)", "Δαχτυλάκι (μικρό — 5ο δάχτυλο)", "Όλα μαζί με πίεση"],
+        correct: 2,
+        exp: "Το δαχτυλάκι (5ο δάχτυλο) είναι το πιο ελαφρύ και λεπτό — ιδανικό για το εύθρυπτο δέρμα γύρω από τα μάτια χωρίς κίνδυνο εφελκυσμού."
+    },
+    {
+        q: "Ποια τεχνική χρησιμοποιείται για να τονωθεί άμεσα το δέρμα με ρυθμικά χτυπηματάκια;",
+        opts: ["Φρικσιόν", "Πετρισάζ", "Εφφλεράζ", "Ταποτεμάν"],
+        correct: 3,
+        exp: "Το Ταποτεμάν (tapotement) — ταχύτατα ρυθμικά χτυπηματάκια με άκρα δαχτύλων — διεγείρει νεύρα, βελτιώνει κυκλοφορία και τονώνει άμεσα το δέρμα."
+    },
+];
+
+let qCurrent = 0;
+let qAnswers = new Array(quizQuestions.length).fill(null);
+let qAnswered = new Array(quizQuestions.length).fill(false);
+let qScore = 0;
+
+function renderQuiz() {
+    const q = quizQuestions[qCurrent];
+    let html = `
+        <div class="quiz-q">Ερώτηση ${qCurrent+1}/6: ${q.q}</div>
+        <div class="quiz-options">
+            ${q.opts.map((o,i)=>`
+                <div class="quiz-opt" id="qopt-${i}" onclick="answerQuiz(${i})">${o}</div>
+            `).join('')}
+        </div>
+        <div class="quiz-feedback" id="qfeedback"></div>
+        <div class="quiz-nav">
+            <div class="quiz-score">Σκορ: ${qScore}/${qCurrent}</div>
+            <button class="q-btn" id="qNextBtn" onclick="nextQuizQ()" disabled>
+                ${qCurrent<quizQuestions.length-1?'Επόμενη →':'🏆 Αποτελέσματα'}
+            </button>
+        </div>
+    `;
+    document.getElementById('quizContent').innerHTML = html;
+}
+
+function answerQuiz(i) {
+    if(qAnswered[qCurrent]) return;
+    qAnswered[qCurrent] = true;
+    const q = quizQuestions[qCurrent];
+    const isCorrect = i === q.correct;
+    if(isCorrect) qScore++;
+    qAnswers[qCurrent] = i;
+
+    q.opts.forEach((_,j) => {
+        const el = document.getElementById('qopt-'+j);
+        if(j===q.correct) el.classList.add('correct');
+        else if(j===i && !isCorrect) el.classList.add('incorrect');
+    });
+
+    const fb = document.getElementById('qfeedback');
+    fb.innerHTML = `${isCorrect?'✅ Σωστά!':'❌ Λάθος!'} ${q.exp}`;
+    fb.classList.add('show');
+    fb.style.borderColor = isCorrect?'#4CAF50':'#F44336';
+    document.getElementById('qNextBtn').disabled = false;
+    document.querySelector('.quiz-score').textContent = `Σκορ: ${qScore}/${qCurrent+1}`;
+}
+
+function nextQuizQ() {
+    if(qCurrent >= quizQuestions.length-1) { showFinalScore(); return; }
+    qCurrent++;
+    renderQuiz();
+}
+
+function showFinalScore() {
+    document.getElementById('quizContent').style.display='none';
+    const pct = Math.round((qScore/quizQuestions.length)*100);
+    let msg = pct===100?'🌟 Άριστα! Εξειδικευμένος θεραπευτής μάλαξης!':
+              pct>=80?'👏 Εξαιρετικό! Γνωρίζετε τις τεχνικές!':
+              pct>=60?'👍 Καλά! Λίγη ακόμα εξάσκηση.':
+                      '📚 Επαναλάβετε τις τεχνικές μάλαξης!';
+    document.getElementById('finalNum').textContent = `${qScore}/6 (${pct}%)`;
+    document.getElementById('finalMsg').textContent = msg;
+    document.getElementById('finalScore').classList.add('show');
+}
+
+renderTechniques();
+renderQuiz();
+</script>
+</body>
+</html>

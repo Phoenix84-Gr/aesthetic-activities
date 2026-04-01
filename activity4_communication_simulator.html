@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δραστηριότητα 4: Εξομοιωτής Επικοινωνίας με Πελάτες</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #8EC5FC 0%, #E0C3FC 100%); min-height: 100vh; padding: 20px; }
+        .simulator-container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 30px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.3); }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.1em; opacity: 0.9; }
+        .chat-interface { display: flex; flex-direction: column; height: 600px; background: linear-gradient(135deg, #FFF5F7, #F0F0F0); }
+        .patient-profile { background: white; padding: 20px; border-bottom: 3px solid #667eea; display: flex; align-items: center; gap: 20px; }
+        .patient-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #FF6B9D, #FFB6C1); display: flex; align-items: center; justify-content: center; font-size: 2.5em; }
+        .patient-details h3 { color: #667eea; margin-bottom: 5px; }
+        .patient-details p { color: #666; margin: 3px 0; }
+        .mood-indicator { padding: 8px 15px; border-radius: 20px; font-size: 0.9em; font-weight: bold; display: inline-block; margin-top: 5px; }
+        .mood-happy { background: #C8E6C9; color: #2E7D32; }
+        .mood-neutral { background: #FFF9C4; color: #F57F17; }
+        .mood-worried { background: #FFCCBC; color: #BF360C; }
+        .mood-angry { background: #FFCDD2; color: #C62828; }
+        .chat-messages { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 70%; padding: 15px 20px; border-radius: 20px; animation: messageIn 0.4s ease; }
+        @keyframes messageIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .message.patient { align-self: flex-start; background: white; border: 2px solid #E0E0E0; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .message.therapist { align-self: flex-end; background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 3px 10px rgba(102,126,234,0.4); }
+        .message-sender { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; opacity: 0.8; }
+        .response-options { background: white; padding: 25px; border-top: 3px solid #667eea; }
+        .options-title { font-size: 1.1em; color: #667eea; margin-bottom: 15px; font-weight: bold; }
+        .response-buttons { display: grid; gap: 12px; }
+        .response-btn { background: linear-gradient(135deg, #E8EAF6, #C5CAE9); border: 2px solid #667eea; padding: 15px 20px; border-radius: 15px; cursor: pointer; transition: all 0.3s ease; text-align: left; font-size: 1em; }
+        .response-btn:hover { background: linear-gradient(135deg, #667eea, #764ba2); color: white; transform: translateX(10px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+        .feedback-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .feedback-overlay.show { display: flex; }
+        .feedback-content { background: white; border-radius: 25px; padding: 40px; max-width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .feedback-icon { font-size: 4em; text-align: center; margin-bottom: 20px; }
+        .feedback-title { font-size: 1.8em; color: #667eea; text-align: center; margin-bottom: 15px; }
+        .feedback-text { font-size: 1.1em; line-height: 1.8; color: #333; margin-bottom: 20px; }
+        .score-bar { background: #E0E0E0; height: 30px; border-radius: 15px; overflow: hidden; margin: 20px 0; }
+        .score-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 1s ease; }
+        .continue-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 15px 40px; border-radius: 25px; font-size: 1.1em; cursor: pointer; display: block; margin: 20px auto 0; transition: all 0.3s ease; }
+        .continue-btn:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(102,126,234,0.5); }
+        .stats-panel { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); padding: 20px; border-radius: 15px; margin: 20px 0; }
+        .stat-item { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1em; }
+        .stat-label { font-weight: bold; color: #2E7D32; }
+    </style>
+</head>
+<body>
+    <div class="simulator-container">
+        <div class="header">
+            <h1>💬 Εξομοιωτής Επικοινωνίας</h1>
+            <p class="subtitle">Εξασκηθείτε στην ευγένεια, τον σεβασμό και την επαγγελματική επικοινωνία</p>
+        </div>
+        <div class="chat-interface">
+            <div class="patient-profile" id="patientProfile"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="response-options" id="responseOptions"></div>
+        </div>
+    </div>
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <div class="feedback-content" id="feedbackContent"></div>
+    </div>
+<script>
+const scenarios = [
+    {
+        patient: { name: "Ελένη Κ.", age: 26, mood: "worried", avatar: "😰", concern: "Θέλει laser αποτρίχωση" },
+        conversation: [{ speaker: "patient", text: "Καλημέρα... Θέλω να κάνω laser αποτρίχωση στα πόδια, αλλά... πόσο κοστίζει; Είμαι φοιτήτρια και δεν έχω πολλά χρήματα. Επίσης, ανησυχώ για τον πόνο..." }],
+        responses: [
+            { text: "Μη στεναχωριέσαι, είναι φθηνό! Θα σε βολέψουμε! Και δεν πονάει καθόλου!", quality: "poor", feedback: "⚠️ ΑΝΑΞΙΟΠΙΣΤΗ απάντηση. Δεν υπόσχεστε χωρίς να γνωρίζετε το ακριβές κόστος. Επίσης, το laser ΜΠΟΡΕΙ να προκαλέσει δυσφορία — δεν πρέπει να το αρνείστε.", patientReaction: "Εντάξει... αλλά δεν μου είπατε το ακριβές κόστος και πόσες συνεδρίες χρειάζομαι;", score: 30 },
+            { text: "Καταλαβαίνω την ανησυχία σας! Το κόστος εξαρτάται από την έκταση και τις συνεδρίες που χρειάζεστε. Ας δούμε πρώτα το δέρμα σας για να σας δώσω ακριβή προσφορά. Έχουμε ευέλικτες επιλογές πληρωμής. Όσο για τον πόνο, είναι ανεκτός — σαν ένα ελαφρύ τσίμπημα, και μπορούμε να χρησιμοποιήσουμε ψυκτικό gel.", quality: "excellent", feedback: "✅ ΑΡΙΣΤΗ επικοινωνία! Δείχνετε εμπάθεια, επαγγελματισμό, προσφέρετε ρεαλιστικές πληροφορίες και λύσεις.", patientReaction: "Α, ευχαριστώ! Αυτό με κάνει να νιώθω καλύτερα και πιο ασφαλής. Πότε μπορούμε να κλείσουμε ραντεβού;", score: 100 },
+            { text: "Αν δεν έχεις χρήματα, γιατί ήρθες; Το laser είναι ακριβό.", quality: "bad", feedback: "❌ ΑΠΑΡΑΔΕΚΤΗ συμπεριφορά! Αυτό είναι ασεβές και απαγορευτικό. ΠΟΤΕ μη μιλάτε έτσι σε πελάτη. Χάνετε πελατολόγιο και φήμη.", patientReaction: "Συγγνώμη που σας ενόχλησα... [φεύγει θυμωμένη και θα γράψει αρνητική κριτική]", score: 0 }
+        ]
+    },
+    {
+        patient: { name: "Μαρίνα Σ.", age: 42, mood: "angry", avatar: "😠", concern: "Δυσαρεστημένη με προηγούμενη θεραπεία" },
+        conversation: [{ speaker: "patient", text: "Είμαι ΠΟΛΥ δυσαρεστημένη! Πριν 3 μήνες μου κάνατε micro needling και ΑΚΟΜΑ έχω κοκκινίλα! Μου είπατε ότι θα φύγει σε 1 εβδομάδα!" }],
+        responses: [
+            { text: "Δεν είναι δική μου ευθύνη. Δεν ακολούθησες τις οδηγίες που σου έδωσα.", quality: "bad", feedback: "❌ ΚΑΤΑΣΤΡΟΦΙΚΗ απάντηση! Δεν αναλαμβάνετε ευθύνη και κατηγορείτε τον πελάτη. Αυτό καταστρέφει τη σχέση και μπορεί να οδηγήσει σε νομικά προβλήματα.", patientReaction: "ΑΠΑΡΑΔΕΚΤΟ! Θα το βγάλω παντού στα social media!", score: 0 },
+            { text: "Λυπάμαι πολύ που νιώθετε έτσι. Ας δούμε μαζί το δέρμα σας. Η κοκκινίλα μπορεί να οφείλεται σε διάφορους λόγους. Ας βρούμε λύση μαζί — η ικανοποίησή σας είναι προτεραιότητά μου.", quality: "excellent", feedback: "✅ ΕΠΑΓΓΕΛΜΑΤΙΚΗ διαχείριση! Δείχνετε εμπάθεια, δεν αμύνεστε, προτείνετε λύση. Έτσι κρατάτε πελάτες ακόμα και σε δύσκολες καταστάσεις.", patientReaction: "Εντάξει... εκτιμώ ότι με ακούσατε. Ελπίζω να βρούμε λύση.", score: 100 },
+            { text: "Μάλλον το δέρμα σας είναι πολύ ευαίσθητο. Αυτά συμβαίνουν μερικές φορές.", quality: "poor", feedback: "⚠️ ΑΝΕΠΑΡΚΗΣ απάντηση. Δεν αναλαμβάνετε πλήρη ευθύνη και φαίνεται ότι αδιαφορείτε. Χρειάζεται περισσότερη εμπάθεια.", patientReaction: "Δηλαδή δικό μου πρόβλημα; Δεν με βοηθάτε καθόλου...", score: 40 }
+        ]
+    },
+    {
+        patient: { name: "Αλέξανδρος Κ.", age: 29, mood: "neutral", avatar: "🤔", concern: "Θέλει πληροφορίες για βαθύ καθαρισμό προσώπου" },
+        conversation: [{ speaker: "patient", text: "Γεια σας, είδα στο Instagram ότι κάνετε βαθύ καθαρισμό προσώπου. Πόσο κοστίζει; Και μπορώ να το κάνω τώρα αμέσως;" }],
+        responses: [
+            { text: "Ναι βέβαια! 60€ και τελειώσαμε! Πάμε τώρα!", quality: "bad", feedback: "❌ ΕΠΙΚΙΝΔΥΝΗ απάντηση! ΔΕΝ παίρνετε ιατρικό ιστορικό, δεν ελέγχετε για αντενδείξεις. Αυτό είναι ΠΑΡΑΒΑΣΗ ασφάλειας!", patientReaction: "Ωραία! [Αργότερα: Παθαίνει ερεθισμό από ενεργό ακμή]", score: 0 },
+            { text: "Θα χαρώ να σας βοηθήσω! Πρώτα χρειάζεται να συμπληρώσουμε ένα ιατρικό ιστορικό για την ασφάλειά σας. Έχετε ενεργή ακμή, ερεθισμό ή πρόσφατη θεραπεία retinol; Μετά θα συζητήσουμε την κατάλληλη θεραπεία και το κόστος.", quality: "excellent", feedback: "✅ ΑΡΙΣΤΗ προσέγγιση! Θέτετε την ασφάλεια πρώτα, ακολουθείτε το σωστό πρωτόκολλο. Αυτό είναι επαγγελματισμός!", patientReaction: "Α, εντάξει! Δεν το περίμενα αλλά καλό είναι. Όχι, δεν έχω κάτι τέτοιο.", score: 100 },
+            { text: "Βαθύ καθαρισμό κάνουν όλοι τώρα! Είναι πολύ ασφαλές, μην ανησυχείς!", quality: "poor", feedback: "⚠️ ΕΠΙΠΟΛΑΙΑ απάντηση. Δεν ελέγχετε για contraindications. Η 'δημοφιλία' δεν σημαίνει ασφάλεια για ΟΛΑ τα άτομα.", patientReaction: "Εμ, οκ... αλλά δεν μου απαντήσατε τίποτα συγκεκριμένο...", score: 35 }
+        ]
+    }
+];
+
+let currentScenario = 0, totalScore = 0, scenariosCompleted = 0;
+
+function loadScenario(index) {
+    if (index >= scenarios.length) { showFinalResults(); return; }
+    const scenario = scenarios[index];
+    document.getElementById('patientProfile').innerHTML = `
+        <div class="patient-avatar">${scenario.patient.avatar}</div>
+        <div class="patient-details">
+            <h3>${scenario.patient.name}, ${scenario.patient.age} ετών</h3>
+            <p>Ανησυχία: ${scenario.patient.concern}</p>
+            <span class="mood-indicator mood-${scenario.patient.mood}">Διάθεση: ${getMoodText(scenario.patient.mood)}</span>
+        </div>`;
+    const messagesDiv = document.getElementById('chatMessages');
+    messagesDiv.innerHTML = '';
+    scenario.conversation.forEach(msg => addMessage(msg.speaker, msg.text));
+    document.getElementById('responseOptions').innerHTML = `
+        <div class="options-title">💬 Πώς θα απαντήσετε;</div>
+        <div class="response-buttons">
+            ${scenario.responses.map((resp, i) => `<button class="response-btn" onclick="selectResponse(${i})">${resp.text}</button>`).join('')}
+        </div>`;
+}
+
+function getMoodText(mood) {
+    return { happy: '😊 Χαρούμενη', neutral: '😐 Ουδέτερη', worried: '😰 Ανήσυχη', angry: '😠 Θυμωμένη' }[mood];
+}
+
+function addMessage(speaker, text) {
+    const messagesDiv = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${speaker}`;
+    const senderName = speaker === 'patient' ? scenarios[currentScenario].patient.name : 'Εσείς (Αισθητικός)';
+    messageDiv.innerHTML = `<div class="message-sender">${senderName}</div><div>${text}</div>`;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function selectResponse(responseIndex) {
+    const response = scenarios[currentScenario].responses[responseIndex];
+    addMessage('therapist', response.text);
+    setTimeout(() => showFeedback(response), 500);
+}
+
+function showFeedback(response) {
+    totalScore += response.score;
+    scenariosCompleted++;
+    let icon = response.score >= 90 ? '🌟' : response.score >= 70 ? '👍' : response.score >= 40 ? '⚠️' : '❌';
+    document.getElementById('feedbackContent').innerHTML = `
+        <div class="feedback-icon">${icon}</div>
+        <div class="feedback-title">Ανατροφοδότηση Επικοινωνίας</div>
+        <div class="feedback-text">${response.feedback}</div>
+        <div class="stats-panel">
+            <div class="stat-item"><span class="stat-label">Βαθμολογία:</span><span>${response.score}/100</span></div>
+            <div class="stat-item"><span class="stat-label">Αντίδραση Πελάτη:</span></div>
+        </div>
+        <div style="background:#F5F5F5;padding:15px;border-radius:10px;margin:15px 0;font-style:italic;">"${response.patientReaction}"</div>
+        <div class="score-bar"><div class="score-fill" style="width:${response.score}%">${response.score}%</div></div>
+        ${currentScenario < scenarios.length - 1
+            ? '<button class="continue-btn" onclick="nextScenario()">Επόμενη Περίπτωση ➡️</button>'
+            : '<button class="continue-btn" onclick="showFinalResults()">Δείτε τα Αποτελέσματα 🏆</button>'}`;
+    document.getElementById('feedbackOverlay').classList.add('show');
+}
+
+function nextScenario() {
+    document.getElementById('feedbackOverlay').classList.remove('show');
+    currentScenario++;
+    loadScenario(currentScenario);
+}
+
+function showFinalResults() {
+    const avgScore = Math.round(totalScore / scenariosCompleted);
+    let finalMessage = avgScore >= 90 ? '🌟 ΑΡΙΣΤΟ! Έχετε εξαιρετικές δεξιότητες επικοινωνίας!' :
+                       avgScore >= 70 ? '👏 Πολύ καλά! Με λίγη εξάσκηση θα γίνετε άριστοι!' :
+                       avgScore >= 50 ? '📚 Καλή αρχή! Χρειάζεται περισσότερη εξάσκηση στην εμπάθεια.' :
+                                        '⚠️ Χρειάζεται σημαντική βελτίωση. Η επικοινωνία είναι το κλειδί!';
+    let finalIcon = avgScore >= 90 ? '🏆' : avgScore >= 70 ? '⭐' : avgScore >= 50 ? '💪' : '📖';
+    document.getElementById('feedbackContent').innerHTML = `
+        <div class="feedback-icon">${finalIcon}</div>
+        <div class="feedback-title">Τελικά Αποτελέσματα</div>
+        <div style="text-align:center;font-size:3em;color:#667eea;font-weight:bold;margin:20px 0;">${avgScore}/100</div>
+        <div class="feedback-text" style="text-align:center;">${finalMessage}</div>
+        <div class="stats-panel">
+            <h3 style="color:#2E7D32;margin-bottom:15px;text-align:center;">📊 Στατιστικά</h3>
+            <div class="stat-item"><span class="stat-label">Σενάρια Ολοκληρώθηκαν:</span><span>${scenariosCompleted}</span></div>
+            <div class="stat-item"><span class="stat-label">Συνολική Βαθμολογία:</span><span>${totalScore}/${scenariosCompleted*100}</span></div>
+            <div class="stat-item"><span class="stat-label">Μέση Επίδοση:</span><span>${avgScore}%</span></div>
+        </div>
+        <div style="background:#E3F2FD;padding:20px;border-radius:10px;margin-top:20px;">
+            <h3 style="color:#1976D2;margin-bottom:10px;">💡 Θυμηθείτε:</h3>
+            <ul style="line-height:1.8;padding-left:20px;color:#333;">
+                <li>Ευγένεια και σεβασμός ΠΑΝΤΑ</li>
+                <li>Ακούστε τον πελάτη με εμπάθεια</li>
+                <li>Η ασφάλεια προηγείται του κέρδους</li>
+                <li>Χρησιμοποιήστε απλή και κατανοητή γλώσσα, όχι τεχνικούς όρους</li>
+                <li>Αναλάβετε ευθύνη — μην αμύνεστε σε παράπονα</li>
+            </ul>
+        </div>
+        <button class="continue-btn" onclick="location.reload()">🔄 Ξαναδοκιμάστε</button>`;
+    document.getElementById('feedbackOverlay').classList.add('show');
+}
+
+window.onload = () => loadScenario(0);
+</script>
+</body>
+</html>

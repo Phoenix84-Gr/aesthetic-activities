@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δραστηριότητα 7: Νυφικό Μακιγιάζ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #d4a0a0, #c17b7b);
+            color: white;
+            padding: 35px 40px;
+            text-align: center;
+        }
+        h1 { font-size: 2.4em; margin-bottom: 8px; }
+        .subtitle { font-size: 1.1em; opacity: 0.9; }
+        .body { padding: 40px; }
+
+        .progress-bar { background: #E0E0E0; height: 8px; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #c17b7b, #fcb69f); height: 100%; transition: width 0.5s ease; }
+        .progress-text { text-align: right; font-size: 0.85em; color: #999; margin-bottom: 25px; }
+
+        .question-card {
+            background: linear-gradient(135deg, #FFF9F5, #FFF0E6);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 25px;
+            border-left: 5px solid #c17b7b;
+        }
+        .q-meta { font-size: 0.85em; color: #c17b7b; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+        .q-text { font-size: 1.15em; color: #333; font-weight: 500; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: grid; gap: 12px; }
+        .option {
+            background: white;
+            border: 2px solid #f0d0c0;
+            border-radius: 14px;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 0.97em;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .option:hover { border-color: #c17b7b; transform: translateX(8px); box-shadow: 0 4px 12px rgba(193,123,123,0.2); }
+        .option.selected { background: linear-gradient(135deg, #c17b7b, #d4a0a0); color: white; border-color: #a05050; }
+        .option.correct { background: linear-gradient(135deg, #4CAF50, #8BC34A); color: white; border-color: #2E7D32; }
+        .option.incorrect { background: linear-gradient(135deg, #F44336, #E57373); color: white; border-color: #C62828; }
+        .opt-letter {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; flex-shrink: 0; font-size: 0.9em;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .explanation {
+            background: linear-gradient(135deg, #FFF8E1, #FFF3CD);
+            border-radius: 12px;
+            padding: 15px 18px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #555;
+            display: none;
+            border-left: 4px solid #FFD700;
+        }
+        .explanation.show { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)} }
+
+        .nav-btns { display: flex; justify-content: space-between; margin-top: 20px; }
+        .btn {
+            background: linear-gradient(135deg, #c17b7b, #d4a0a0);
+            color: white; border: none; padding: 13px 35px; border-radius: 25px;
+            font-size: 1em; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(193,123,123,0.3);
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: #E0E0E0; color: #555; box-shadow: none; }
+        .btn-secondary:hover { background: #BDBDBD; transform: none; }
+
+        .score-screen { display: none; text-align: center; padding: 20px 0; }
+        .score-screen.show { display: block; animation: fadeIn 0.6s; }
+        .score-circle {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: linear-gradient(135deg, #c17b7b, #fcb69f);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 20px auto;
+            box-shadow: 0 10px 30px rgba(193,123,123,0.4);
+            color: white;
+        }
+        .score-num { font-size: 3em; font-weight: bold; }
+        .score-total { font-size: 1em; opacity: 0.9; }
+        .score-msg { font-size: 1.3em; color: #c17b7b; margin: 15px 0; font-weight: bold; }
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .tip-card {
+            background: linear-gradient(135deg, #FFF9F5, #FFF0E6);
+            border-radius: 14px;
+            padding: 15px;
+            border-left: 4px solid #c17b7b;
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #555;
+        }
+        .tip-card strong { color: #c17b7b; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>👰 Νυφικό Μακιγιάζ</h1>
+        <p class="subtitle">Quiz για τεχνικές & προϊόντα νυφικού μακιγιάζ</p>
+    </div>
+    <div class="body">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText">Ερώτηση 1 / 14</div>
+
+        <div id="quizArea"></div>
+        <div class="nav-btns">
+            <button class="btn btn-secondary" id="prevBtn" onclick="prevQ()" disabled>← Προηγούμενη</button>
+            <button class="btn" id="nextBtn" onclick="nextQ()" disabled>Επόμενη →</button>
+        </div>
+
+        <div class="score-screen" id="scoreScreen">
+            <div class="score-circle">
+                <div class="score-num" id="scoreNum">-</div>
+                <div class="score-total" id="scoreTotal">/ 14</div>
+            </div>
+            <div class="score-msg" id="scoreMsg"></div>
+            <div class="tips-grid">
+                <div class="tip-card"><strong>💄 Primer</strong><br>Πάντα πριν το foundation — εξασφαλίζει διάρκεια 8-12 ώρες στο νυφικό μακιγιάζ.</div>
+                <div class="tip-card"><strong>💧 Waterproof</strong><br>Mascara, eyeliner και blush πρέπει να είναι waterproof για δάκρυα χαράς.</div>
+                <div class="tip-card"><strong>🎨 Skin Tone</strong><strong></strong><br>Η κλίμακα Fitzpatrick καθορίζει τον τόνο foundation — test στη γνάθο.</div>
+                <div class="tip-card"><strong>✨ Setting Spray</strong><br>Σφραγίζει το μακιγιάζ στο τέλος. Ψεκάζουμε από 30cm σε Χ κίνηση.</div>
+            </div>
+            <button class="btn" onclick="location.reload()">🔄 Ξαναδοκιμάστε</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const questions = [
+    {
+        text: "👰 Ποιο είναι το ΠΡΩΤΟ βήμα στη νυφική προετοιμασία δέρματος (skincare prep);",
+        options: ["Εφαρμογή foundation", "Καθαρισμός & ενυδάτωση δέρματος", "Εφαρμογή eyeliner", "Σκιά ματιών"],
+        correct: 1,
+        explanation: "Η νυφική προετοιμασία ξεκινά πάντα με καθαρισμό και ενυδάτωση του δέρματος. Το moisturized δέρμα δέχεται καλύτερα το makeup και διαρκεί περισσότερο."
+    },
+    {
+        text: "⏳ Πόσο νωρίς πριν τη γαμήλια τελετή πρέπει να ξεκινά το νυφικό μακιγιάζ;",
+        options: ["15-20 λεπτά", "1 ώρα", "2-3 ώρες", "5+ ώρες"],
+        correct: 2,
+        explanation: "Το νυφικό μακιγιάζ χρειάζεται 2-3 ώρες: 30' skincare prep + 60-90' εφαρμογή + 30' finishing & διόρθωση. Η βιασύνη καταστρέφει αποτέλεσμα."
+    },
+    {
+        text: "💜 Ποιο προϊόν εφαρμόζεται ΜΕΤΑ το moisturizer και ΠΡΙΝ το foundation;",
+        options: ["Blush", "Bronzer", "Primer", "Setting powder"],
+        correct: 2,
+        explanation: "Το Primer εφαρμόζεται μετά το moisturizer (και SPF) για να σφραγίσει τους πόρους, εξομαλύνει την επιφάνεια και εξασφαλίζει διάρκεια 8-12 ωρών στο foundation."
+    },
+    {
+        text: "🎨 Η κλίμακα Fitzpatrick χρησιμοποιείται για να:",
+        options: ["Μετράμε την αντοχή του βερνικιού", "Ταξινομούμε τον τύπο και τόνο δέρματος", "Υπολογίζουμε δόση αναισθησίας", "Επιλέγουμε χρώμα σκιάς ματιών"],
+        correct: 1,
+        explanation: "Η κλίμακα Fitzpatrick (τύποι I-VI) ταξινομεί το δέρμα βάσει χρώματος και αντίδρασης στον ήλιο. Βοηθά στη σωστή επιλογή foundation και SPF για τη νύφη."
+    },
+    {
+        text: "💧 Για το νυφικό μακιγιάζ, γιατί προτιμάμε WATERPROOF mascara;",
+        options: ["Γιατί είναι φθηνότερη", "Γιατί αντέχει σε δάκρυα και υγρασία όλη την ημέρα", "Γιατί απλώνεται πιο γρήγορα", "Γιατί κλείνει τα μάτια φαρδύτερα"],
+        correct: 1,
+        explanation: "Τα δάκρυα χαράς, η ζέστη και η υγρασία μπορούν να καταστρέψουν κανονική mascara. Η waterproof διατηρεί το look αλώβητο σε όλη τη διάρκεια της τελετής."
+    },
+    {
+        text: "🌸 Ποια τεχνική δίνει το πιο φυσικό airbrushed αποτέλεσμα στο foundation;",
+        options: ["Εφαρμογή με τα δάχτυλα", "Εφαρμογή με flat brush", "Εφαρμογή με νοτισμένο beauty blender/σφουγγαράκι", "Ψεκασμός με spray"],
+        correct: 2,
+        explanation: "Το νοτισμένο beauty blender (σφουγγαράκι) με patting (χτυπητή) κίνηση δίνει το πιο φυσικό, αλλά κι ανθεκτικό αποτέλεσμα, ιδανικό για νυφικό μακιγιάζ."
+    },
+    {
+        text: "✨ Τι εφαρμόζουμε ΤΕΛΕΥΤΑΙΟ για να 'σφραγίσουμε' και να μακρύνουμε τη διάρκεια του νυφικού μακιγιάζ;",
+        options: ["Primer", "Foundation", "Setting spray", "Concealer"],
+        correct: 2,
+        explanation: "Το setting spray εφαρμόζεται τελευταίο — σφραγίζει όλα τα στρώματα makeup, αποτρέπει το οξείδωμα και εξασφαλίζει διάρκεια 12-16 ωρών. Σωστή απόσταση: 25-30cm."
+    },
+    {
+        text: "👁️ Σε ποια ΣΕΙΡΑ εφαρμόζεται το μακιγιάζ ματιών;",
+        options: ["Mascara → Eyeliner → Σκιά", "Σκιά → Eyeliner → Mascara", "Eyeliner → Σκιά → Mascara", "Όποια σειρά, δεν έχει σημασία"],
+        correct: 1,
+        explanation: "Σωστή σειρά: 1) Primer ματιών → 2) Σκιά (από ανοιχτό σε σκούρο) → 3) Eyeliner → 4) Mascara. Η σκιά πρώτα αποτρέπει να πέσει σκόνη πάνω στο eyeliner."
+    },
+    {
+        text: "🌺 Ποια τεχνική σκιάς ματιών δίνει βάθος χωρίς έντονο αποτέλεσμα για νυφικό look;",
+        options: ["Cut crease με μαύρη σκιά", "Smoky eye με φωτεινά glitter", "Halo eye ή Soft diffused technique σε nude/ρόζ τόνους", "Graphic liner νεόν"],
+        correct: 2,
+        explanation: "Το halo eye ή soft diffused με nude/ρόζ/champagne τόνους δίνει λαμπρότητα στο νυφικό look. Είναι κλασικό, φωτογενές και κολακευτικό για όλα τα χρώματα ματιών."
+    },
+    {
+        text: "💋 Πώς εξασφαλίζουμε ΑΝΘΕΚΤΙΚΟ νυφικό κραγιόν για 6+ ώρες;",
+        options: ["Απλώνουμε 5 στρώσεις κραγιόν", "Primer χειλιών → κραγιόν → παούδρα από tissue → 2η στρώση κραγιόν", "Μόνο lip gloss", "Δεν χρησιμοποιούμε κραγιόν, μόνο νοτισμένο lip balm"],
+        correct: 1,
+        explanation: "Η τεχνική: 1) Lip liner + lip primer → 2) 1η στρώση κραγιόν → 3) Παούδρα μέσα από tissue (ελαφρύ πάτημα) → 4) 2η στρώση κραγιόν. Διάρκεια 6-8 ώρες!"
+    },
+    {
+        text: "🌟 Ποιο προϊόν προσθέτει λαμπρότητα στα ζυγωματικά της νύφης χωρίς βαρύ εφέ;",
+        options: ["Contouring stick (σκούρο)", "Highlighter σε liquid ή powder μορφή", "Μαύρη σκιά ματιών", "SPF 50 sunscreen"],
+        correct: 1,
+        explanation: "Το highlighter (σε liquid ή powder) εφαρμόζεται στο ψηλότερο σημείο των ζυγωματικών, στη μύτη, στο cupid's bow και στο brow bone για φυσική λαμπρότητα στις φωτογραφίες."
+    },
+    {
+        text: "📸 Γιατί χρησιμοποιούμε setting powder πάνω από το foundation στο νυφικό μακιγιάζ;",
+        options: ["Για να αλλάξουμε το χρώμα", "Για να κλείσουμε τους πόρους, ελέγξουμε τη λιπαρότητα και σταθεροποιήσουμε", "Για να αφαιρέσουμε το foundation", "Δεν χρειάζεται"],
+        correct: 1,
+        explanation: "Το setting powder (διάφανο ή με χρώμα) σφραγίζει το liquid foundation, ελέγχει τη λιπαρότητα και αποτρέπει το 'creasing'. Εφαρμόζεται με fluffy brush ή beauty blender."
+    },
+    {
+        text: "🎨 Ποια τεχνική contouring είναι κατάλληλη για νυφικό μακιγιάζ σε φωτογραφίες;",
+        options: ["Έντονο sharp contouring με σκούρα matte σκιά", "Soft bronzer contouring — αεράτο και φυσικό", "Χωρίς contouring — μόνο flat foundation", "Contouring μόνο στο μέτωπο"],
+        correct: 1,
+        explanation: "Το soft bronzer contouring (ελαφρύ, diffused) είναι ιδανικό για νύφη — δίνει διάσταση χωρίς να φαίνεται τεχνητό στις φωτογραφίες. Το harsh contouring φαίνεται βαρύ στο flash."
+    },
+    {
+        text: "📋 Τι πρέπει να κάνει ο αισθητικός ΠΡΙΝ το νυφικό μακιγιάζ (consultation);",
+        options: ["Να ξεκινά αμέσως χωρίς προετοιμασία", "Patch test σε υλικά, λήψη ιστορικού, trial makeup session 1 μήνα πριν", "Να αγοράσει καινούρια προϊόντα", "Να ρωτά μόνο για το χρώμα φορέματος"],
+        correct: 1,
+        explanation: "Σωστή νυφική προετοιμασία: 1) Patch test για αλλεργίες 48 ώρες πριν το trial → 2) Λήψη ιστορικού (αλλεργίες, δέρμα, φάρμακα) → 3) Trial session 4-6 βδομάδες πριν → 4) Φωτογράφηση αποτελέσματος."
+    },
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let answered = new Array(questions.length).fill(false);
+
+function render() {
+    const q = questions[current];
+    const pct = ((current+1)/questions.length)*100;
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressText').textContent = `Ερώτηση ${current+1} / ${questions.length}`;
+
+    let html = `<div class="question-card">
+        <div class="q-meta">ΕΡΩΤΗΣΗ ${current+1} / ${questions.length}</div>
+        <div class="q-text">${q.text}</div>
+        <div class="options">`;
+
+    q.options.forEach((opt, i) => {
+        let cls = 'option';
+        if(answered[current]) {
+            if(i === q.correct) cls += ' correct';
+            else if(i === answers[current] && i !== q.correct) cls += ' incorrect';
+        } else if(i === answers[current]) cls += ' selected';
+        const letter = String.fromCharCode(65+i);
+        html += `<div class="${cls}" onclick="selectAnswer(${i})" id="opt-${i}">
+            <div class="opt-letter">${letter}</div>
+            <div>${opt}</div>
+        </div>`;
+    });
+
+    html += `</div>`;
+    if(answered[current]) {
+        html += `<div class="explanation show">💡 ${q.explanation}</div>`;
+    }
+    html += `</div>`;
+    document.getElementById('quizArea').innerHTML = html;
+
+    document.getElementById('prevBtn').disabled = current === 0;
+    const nextBtn = document.getElementById('nextBtn');
+    if(current === questions.length-1) {
+        nextBtn.textContent = '🏆 Αποτελέσματα';
+        nextBtn.disabled = !answered[current];
+    } else {
+        nextBtn.textContent = 'Επόμενη →';
+        nextBtn.disabled = !answered[current];
+    }
+}
+
+function selectAnswer(i) {
+    if(answered[current]) return;
+    answers[current] = i;
+    answered[current] = true;
+    render();
+}
+
+function nextQ() {
+    if(current === questions.length-1) { showScore(); return; }
+    current++;
+    render();
+}
+function prevQ() { if(current>0) { current--; render(); } }
+
+function showScore() {
+    document.getElementById('quizArea').style.display='none';
+    document.querySelector('.nav-btns').style.display='none';
+    document.getElementById('progressFill').parentElement.style.display='none';
+    document.getElementById('progressText').style.display='none';
+
+    const correct = answers.filter((a,i)=>a===questions[i].correct).length;
+    const pct = Math.round((correct/questions.length)*100);
+    let msg = pct===100?'🌟 Αριστούχος Νυφική Μακιγιέρ!':
+              pct>=85?'👏 Εξαιρετικές γνώσεις νυφικού μακιγιάζ!':
+              pct>=70?'👍 Πολύ καλά! Λίγη ακόμα εξάσκηση.':
+              pct>=50?'📚 Καλή βάση, χρειάζεται επανάληψη.':
+                      '📖 Μελετήστε τις τεχνικές νυφικού μακιγιάζ!';
+
+    document.getElementById('scoreNum').textContent = correct;
+    document.getElementById('scoreTotal').textContent = '/ '+questions.length+' ('+pct+'%)';
+    document.getElementById('scoreMsg').textContent = msg;
+    document.getElementById('scoreScreen').classList.add('show');
+}
+
+render();
+</script>
+</body>
+</html>

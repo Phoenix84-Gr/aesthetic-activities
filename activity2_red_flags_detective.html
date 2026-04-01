@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δραστηριότητα 2: Ανίχνευση Κόκκινων Σημαιών</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.97);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        h1 { color: #FF416C; text-align: center; font-size: 2.4em; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #666; font-size: 1.1em; margin-bottom: 25px; }
+        .instructions {
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border-left: 5px solid #FF9800;
+            border-radius: 15px;
+            padding: 18px 22px;
+            margin-bottom: 30px;
+            font-size: 1em;
+            color: #555;
+            line-height: 1.7;
+        }
+        .progress-bar { background: #E0E0E0; height: 10px; border-radius: 10px; margin: 15px 0 25px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #FF416C, #FF4B2B); height: 100%; width: 0%; transition: width 0.5s ease; }
+        .scenario-counter { text-align: center; color: #888; font-size: 1em; margin-bottom: 10px; }
+
+        .patient-card {
+            background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #FF416C;
+        }
+        .patient-header { display: flex; align-items: center; gap: 15px; margin-bottom: 18px; }
+        .patient-avatar { font-size: 3em; }
+        .patient-name { font-size: 1.4em; font-weight: bold; color: #FF416C; }
+        .patient-request { color: #888; font-size: 0.95em; margin-top: 4px; }
+
+        .items-label { font-weight: bold; color: #555; margin-bottom: 12px; font-size: 1em; }
+        .items-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .item-badge {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.95em;
+            color: #444;
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+        .item-badge:hover { border-color: #FF416C; transform: scale(1.04); box-shadow: 0 4px 12px rgba(255,65,108,0.2); }
+        .item-badge.flagged {
+            background: linear-gradient(135deg, #FF416C, #FF6B9D);
+            color: white;
+            border-color: #FF416C;
+            box-shadow: 0 4px 15px rgba(255,65,108,0.4);
+        }
+        .item-badge.correct-flag { background: linear-gradient(135deg, #4CAF50, #8BC34A); border-color: #2E7D32; color: white; }
+        .item-badge.wrong-flag { background: linear-gradient(135deg, #F44336, #E57373); border-color: #C62828; color: white; }
+        .item-badge.missed-flag { background: linear-gradient(135deg, #FF9800, #FFB74D); border-color: #E65100; color: white; }
+        .item-badge.safe { background: #f9f9f9; border-color: #ccc; color: #999; pointer-events: none; }
+
+        .check-btn {
+            background: linear-gradient(135deg, #FF416C, #FF4B2B);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+            box-shadow: 0 5px 20px rgba(255,65,108,0.4);
+            transition: all 0.3s;
+        }
+        .check-btn:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(255,65,108,0.6); }
+        .check-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .result-panel {
+            background: linear-gradient(135deg, #FFF9E6, #FFF3CD);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #FFD700;
+            display: none;
+        }
+        .result-panel.show { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(-15px); } to { opacity:1; transform: translateY(0); } }
+        .result-score { font-size: 1.5em; font-weight: bold; color: #FF416C; text-align: center; margin-bottom: 12px; }
+        .flag-explanation { background: white; border-radius: 10px; padding: 12px 16px; margin: 8px 0; font-size: 0.95em; line-height: 1.6; }
+        .flag-explanation.correct { border-left: 4px solid #4CAF50; }
+        .flag-explanation.missed { border-left: 4px solid #FF9800; }
+        .flag-explanation.wrong { border-left: 4px solid #F44336; }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            border-radius: 25px;
+            font-size: 1.05em;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+            transition: all 0.3s;
+        }
+        .next-btn:hover { transform: scale(1.05); }
+
+        .final-score-box {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        .final-score-box.show { display: block; animation: fadeIn 0.6s ease; }
+        .final-score-num { font-size: 4em; font-weight: bold; margin: 15px 0; }
+        .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; font-size: 0.85em; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚨 Ανίχνευση Κόκκινων Σημαιών</h1>
+    <p class="subtitle">Εντοπίστε τις αντενδείξεις και προστατεύστε τον πελάτη σας!</p>
+
+    <div class="instructions">
+        <strong>📋 Οδηγίες:</strong> Διαβάστε το προφίλ κάθε πελάτη και κάντε κλικ σε <strong>όλα τα στοιχεία που αποτελούν αντένδειξη</strong> (κόκκινη σημαία 🚩) για τη ζητούμενη θεραπεία. Μπορείτε να επιλέξετε πολλά στοιχεία. Πατήστε "Έλεγχος" όταν είστε έτοιμοι.
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#4CAF50"></div> Σωστή σημαία που βρήκατε</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF9800"></div> Σημαία που χάσατε</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F44336"></div> Λανθασμένη επιλογή σας</div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="scenario-counter" id="scenarioCounter">Σενάριο 1 από 4</div>
+
+    <div id="scenarioArea"></div>
+
+    <div class="final-score-box" id="finalScoreBox">
+        <div style="font-size:2em;">🏆</div>
+        <div style="font-size:1.4em; margin-bottom:10px;">Τελική Βαθμολογία</div>
+        <div class="final-score-num" id="finalScoreNum">-</div>
+        <div id="finalMsg" style="font-size:1.1em; opacity:0.9;"></div>
+        <button class="next-btn" onclick="location.reload()" style="margin-top:20px; background:rgba(255,255,255,0.2); border:2px solid white;">🔄 Ξαναδοκιμάστε</button>
+    </div>
+</div>
+
+<script>
+const scenarios = [
+    {
+        patient: { avatar: "👩", name: "Ζωή Α., 45 ετών", request: "Θέλει: Ενυδάτωση προσώπου με κρέμα & μάλαξη" },
+        items: [
+            { text: "Διαβήτης τύπου 2", isFlag: true, explanation: "🚩 Ο διαβήτης επηρεάζει την κυκλοφορία και την επούλωση. Απαιτεί ιδιαίτερη προσοχή — ορισμένες τεχνικές μάλαξης αντενδείκνυνται." },
+            { text: "Λαμβάνει μετφορμίνη", isFlag: true, explanation: "🚩 Η φαρμακευτική αγωγή πρέπει να καταγράφεται. Η μετφορμίνη είναι για τον διαβήτη — επιβεβαιώνει την κατάσταση υγείας." },
+            { text: "Αλλεργία σε άρωμα", isFlag: true, explanation: "🚩 Πολλές κρέμες ενυδάτωσης περιέχουν αρώματα. Αντένδειξη για αρωματούχα προϊόντα — απαιτείται hypoallergenic σειρά." },
+            { text: "45 ετών", isFlag: false, explanation: "" },
+            { text: "Δασκάλα", isFlag: false, explanation: "" },
+            { text: "Ξηρό δέρμα", isFlag: false, explanation: "" },
+        ]
+    },
+    {
+        patient: { avatar: "👧", name: "Αλεξία Μ., 22 ετών", request: "Θέλει: Βαθύ καθαρισμό προσώπου" },
+        items: [
+            { text: "Λαμβάνει ισοτρετινοΐνη", isFlag: true, explanation: "🚩 ΚΡΙΣΙΜΗ αντένδειξη! Η ισοτρετινοΐνη κάνει το δέρμα εξαιρετικά ευαίσθητο. Απαγορεύεται ο βαθύς καθαρισμός για 6+ μήνες μετά τη διακοπή." },
+            { text: "Ενεργής ακμή", isFlag: true, explanation: "🚩 Η ενεργής ακμή με φλεγμονή αποτελεί αντένδειξη για βαθύ καθαρισμό — κίνδυνος εξάπλωσης μόλυνσης." },
+            { text: "Πρόσφατο ηλιακό έγκαυμα", isFlag: true, explanation: "🚩 Το ηλιακό έγκαυμα κάνει το δέρμα ευαίσθητο και φλεγμαίνον. Κανένας επεμβατικός καθαρισμός ωσότου αποκατασταθεί." },
+            { text: "Καστανά μάτια", isFlag: false, explanation: "" },
+            { text: "22 ετών", isFlag: false, explanation: "" },
+            { text: "Φοιτήτρια", isFlag: false, explanation: "" },
+        ]
+    },
+    {
+        patient: { avatar: "🤰", name: "Ειρήνη Π., 30 ετών", request: "Θέλει: Laser αποτρίχωση ποδιών" },
+        items: [
+            { text: "Εγκυμοσύνη 5ου μήνα", isFlag: true, explanation: "🚩 Κύρια αντένδειξη! Το laser ΑΠΑΓΟΡΕΥΕΤΑΙ κατά την εγκυμοσύνη λόγω αβέβαιης επίδρασης στο έμβρυο." },
+            { text: "Φωτοευαίσθητο δέρμα", isFlag: true, explanation: "🚩 Αντένδειξη! Το φωτοευαίσθητο δέρμα αντιδρά έντονα στο laser — κίνδυνος εγκαυμάτων και μόνιμης δυσχρωμίας." },
+            { text: "Λαμβάνει αντιυπερτασικά", isFlag: true, explanation: "🚩 Ορισμένα αντιυπερτασικά (π.χ. diuretics) αυξάνουν φωτοευαισθησία. Απαιτεί έλεγχο της δραστικής ουσίας." },
+            { text: "Αγαπά την παραλία", isFlag: false, explanation: "" },
+            { text: "30 ετών", isFlag: false, explanation: "" },
+            { text: "Σκούρα τρίχα", isFlag: false, explanation: "" },
+        ]
+    },
+    {
+        patient: { avatar: "✋", name: "Κατερίνα Δ., 25 ετών", request: "Θέλει: Κλασικό μανικιούρ με χρωματιστό βερνίκι" },
+        items: [
+            { text: "Μυκητίαση νυχιών (onikomycosis)", isFlag: true, explanation: "🚩 Η μυκητίαση είναι μολυσματική αντένδειξη! ΑΠΑΓΟΡΕΥΕΤΑΙ το μανικιούρ — κίνδυνος εξάπλωσης μύκητα και μόλυνσης εργαλείων." },
+            { text: "Πληγές/κοψίματα στα χέρια", isFlag: true, explanation: "🚩 Ανοιχτές πληγές = κίνδυνος μόλυνσης. Το μανικιούρ αναβάλλεται ωσότου επουλωθούν εντελώς." },
+            { text: "Λαμβάνει αντιπηκτικά", isFlag: true, explanation: "🚩 Τα αντιπηκτικά (π.χ. ασπιρίνη, βαρφαρίνη) αυξάνουν αιμορραγικό κίνδυνο. Ιδιαίτερη προσοχή κατά την αφαίρεση επιδερμίδας." },
+            { text: "Αγαπά το nail art", isFlag: false, explanation: "" },
+            { text: "25 ετών", isFlag: false, explanation: "" },
+            { text: "Κοντά νύχια", isFlag: false, explanation: "" },
+        ]
+    }
+];
+
+let current = 0;
+let totalPoints = 0;
+let maxPoints = 0;
+let selected = [];
+
+function calcMax() {
+    return scenarios.reduce((s,sc) => s + sc.items.filter(i=>i.isFlag).length, 0);
+}
+
+function renderScenario() {
+    if (current >= scenarios.length) { showFinal(); return; }
+    const sc = scenarios[current];
+    selected = [];
+    document.getElementById('progressFill').style.width = ((current / scenarios.length)*100) + '%';
+    document.getElementById('scenarioCounter').textContent = `Σενάριο ${current+1} από ${scenarios.length}`;
+
+    document.getElementById('scenarioArea').innerHTML = `
+        <div class="patient-card">
+            <div class="patient-header">
+                <div class="patient-avatar">${sc.patient.avatar}</div>
+                <div>
+                    <div class="patient-name">${sc.patient.name}</div>
+                    <div class="patient-request">${sc.patient.request}</div>
+                </div>
+            </div>
+            <div class="items-label">🔍 Κάντε κλικ στα στοιχεία που θεωρείτε αντένδειξη:</div>
+            <div class="items-grid" id="itemsGrid">
+                ${sc.items.map((item, i) => `
+                    <div class="item-badge" id="badge-${i}" onclick="toggleFlag(${i})">${item.text}</div>
+                `).join('')}
+            </div>
+        </div>
+        <button class="check-btn" onclick="checkAnswers()">🔍 Έλεγχος Απαντήσεων</button>
+        <div class="result-panel" id="resultPanel"></div>
+    `;
+}
+
+function toggleFlag(i) {
+    const badge = document.getElementById('badge-' + i);
+    const idx = selected.indexOf(i);
+    if (idx === -1) { selected.push(i); badge.classList.add('flagged'); }
+    else { selected.splice(idx, 1); badge.classList.remove('flagged'); }
+}
+
+function checkAnswers() {
+    const sc = scenarios[current];
+    let scenarioPoints = 0;
+    let explanations = [];
+
+    sc.items.forEach((item, i) => {
+        const badge = document.getElementById('badge-' + i);
+        badge.onclick = null;
+        badge.classList.remove('flagged');
+
+        const wasSelected = selected.includes(i);
+
+        if (item.isFlag && wasSelected) {
+            badge.classList.add('correct-flag');
+            scenarioPoints++;
+            explanations.push({ type: 'correct', text: `✅ <strong>${item.text}</strong>: ${item.explanation}` });
+        } else if (item.isFlag && !wasSelected) {
+            badge.classList.add('missed-flag');
+            explanations.push({ type: 'missed', text: `⚠️ <strong>${item.text}</strong>: ${item.explanation} <em>(Το χάσατε!)</em>` });
+        } else if (!item.isFlag && wasSelected) {
+            badge.classList.add('wrong-flag');
+            explanations.push({ type: 'wrong', text: `❌ <strong>${item.text}</strong>: Αυτό ΔΕΝ είναι αντένδειξη για αυτή τη θεραπεία.` });
+        } else {
+            badge.classList.add('safe');
+        }
+    });
+
+    const flags = sc.items.filter(i=>i.isFlag).length;
+    totalPoints += scenarioPoints;
+    maxPoints += flags;
+    const pct = Math.round((scenarioPoints/flags)*100);
+
+    const panel = document.getElementById('resultPanel');
+    panel.innerHTML = `
+        <div class="result-score">Σκορ σεναρίου: ${scenarioPoints}/${flags} (${pct}%)</div>
+        ${explanations.map(e => `<div class="flag-explanation ${e.type}">${e.text}</div>`).join('')}
+        <button class="next-btn" onclick="nextScenario()">
+            ${current < scenarios.length-1 ? 'Επόμενο Σενάριο ➡️' : 'Δείτε τα Αποτελέσματα 🏆'}
+        </button>
+    `;
+    panel.classList.add('show');
+    document.querySelector('.check-btn').disabled = true;
+}
+
+function nextScenario() { current++; renderScenario(); }
+
+function showFinal() {
+    document.getElementById('scenarioArea').innerHTML = '';
+    document.getElementById('scenarioCounter').textContent = '';
+    document.getElementById('progressFill').style.width = '100%';
+    const pct = Math.round((totalPoints/maxPoints)*100);
+    let msg = pct===100 ? '🌟 Τέλειο! Είστε εξαιρετικός επαγγελματίας ασφάλειας!' :
+              pct>=75  ? '👏 Πολύ καλά! Εντοπίζετε τις περισσότερες αντενδείξεις.' :
+              pct>=50  ? '👍 Καλή προσπάθεια! Χρειάζεται επανάληψη στις αντενδείξεις.' :
+                         '📚 Μελετήστε περισσότερο τις αντενδείξεις — είναι κρίσιμες για την ασφάλεια!';
+    const box = document.getElementById('finalScoreBox');
+    document.getElementById('finalScoreNum').textContent = totalPoints + '/' + maxPoints + ' (' + pct + '%)';
+    document.getElementById('finalMsg').textContent = msg;
+    box.classList.add('show');
+}
+
+maxPoints = calcMax();
+renderScenario();
+</script>
+</body>
+</html>
